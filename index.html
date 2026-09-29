@@ -39,6 +39,7 @@
 
   .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;justify-content:space-between;}
   .toolbar-left{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .periodo-label{font-weight:700;color:var(--primary);background:var(--row-hover);padding:9px 14px;border-radius:8px;font-size:14px;border:1px solid var(--border);}
   input,select{padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);font-size:14px;}
   .btn{padding:9px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px;}
   .btn-primary{background:var(--primary);color:#fff;}
@@ -83,7 +84,7 @@
 
 <header>
   <img src="https://chrysx6.github.io/LinksAguiaContab/links/img/logo1.jpg" alt="Águia Contab">
-  <h1>Águia Contab — Cadastros de Apoio</h1>
+  <h1>Cadastros de Apoio</h1>
   <button class="btn-theme" id="themeBtn" title="Alternar tema">🌙</button>
 </header>
 
@@ -104,12 +105,8 @@
     </div>
     <div class="card">
       <table>
-        <thead>
-          <tr><th>Empresa</th><th>CNPJ</th><th>Login</th><th>Senha</th><th>Ações</th></tr>
-        </thead>
-        <tbody id="empTableBody">
-          <tr><td colspan="5" class="loading">Carregando...</td></tr>
-        </tbody>
+        <thead><tr><th>Empresa</th><th>CNPJ</th><th>Login</th><th>Senha</th><th>Ações</th></tr></thead>
+        <tbody id="empTableBody"><tr><td colspan="5" class="loading">Carregando...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -118,34 +115,33 @@
   <div class="view" id="view-sindical">
     <div class="toolbar">
       <div class="toolbar-left">
-        <span style="font-weight:700;color:var(--primary);">Período: 2026/2027</span>
+        <span class="periodo-label">Período: 2026/2027</span>
         <input type="text" id="searchSind" placeholder="Buscar empresa, sindicato...">
       </div>
       <button class="btn btn-primary" onclick="openSindModal()">+ Adicionar</button>
     </div>
-
     <div class="subtabs">
       <div class="subtab active" data-sub="companies" onclick="switchSub('companies')">Empresas (CNPJ)</div>
       <div class="subtab" data-sub="domestics" onclick="switchSub('domestics')">Domésticas (CPF)</div>
     </div>
-
     <div class="card">
       <table>
         <thead>
-          <tr id="sindThead">
-            <th>Empresa</th><th id="sindDocHeader">CNPJ</th><th>Sindicato</th><th>Data</th><th>Dissídio</th><th>PLR</th><th>Ações</th>
+          <tr id="sindTheadCompanies">
+            <th>Empresa</th><th>CNPJ</th><th>Sindicato</th><th>Data</th><th>Dissídio</th><th>Ações</th>
+          </tr>
+          <tr id="sindTheadDomestics" style="display:none;">
+            <th>Empresa</th><th>CPF</th><th>Sindicato</th><th>Data</th><th>Dissídio</th><th>Ações</th>
           </tr>
         </thead>
-        <tbody id="sindTableBody">
-          <tr><td colspan="7" class="loading">Carregando...</td></tr>
-        </tbody>
+        <tbody id="sindTableBody"><tr><td colspan="6" class="loading">Carregando...</td></tr></tbody>
       </table>
     </div>
   </div>
 
 </div>
 
-<!-- ============ MODAL EMPREGADOR ============ -->
+<!-- MODAL EMPREGADOR -->
 <div class="modal-bg" id="empModalBg">
   <div class="modal">
     <h2 id="empModalTitle">Cadastrar Empresa</h2>
@@ -161,7 +157,7 @@
   </div>
 </div>
 
-<!-- ============ MODAL SINDICAL ============ -->
+<!-- MODAL SINDICAL -->
 <div class="modal-bg" id="sindModalBg">
   <div class="modal">
     <h2 id="sindModalTitle">Adicionar</h2>
@@ -171,7 +167,6 @@
     <div class="field"><label>Sindicato</label><input type="text" id="sindSindicato"></div>
     <div class="field"><label>Data</label><input type="text" id="sindData"></div>
     <div class="field"><label>Dissídio</label><input type="text" id="sindDissidio"></div>
-    <div class="field"><label>PLR</label><input type="text" id="sindPlr"></div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('sindModalBg')">Cancelar</button>
       <button class="btn btn-primary" onclick="saveSind()">Salvar</button>
@@ -214,7 +209,8 @@ async function apiPost(url, body){
   const res = await fetch(url, {
     method:'POST',
     body: JSON.stringify(body),
-    headers: { 'Content-Type':'text/plain;charset=utf-8' }
+    headers: { 'Content-Type':'text/plain;charset=utf-8' },
+    cache:'no-store'
   });
   return res.json();
 }
@@ -228,13 +224,13 @@ const themeBtn = document.getElementById('themeBtn');
 function applyTheme(theme){
   document.documentElement.setAttribute('data-theme', theme);
   themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
-  localStorage.setItem('aguia_theme', theme);
+  localStorage.setItem('aguia_theme_apoio', theme);
 }
 themeBtn.onclick = ()=>{
   const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
   applyTheme(current);
 };
-applyTheme(localStorage.getItem('aguia_theme') || 'light');
+applyTheme(localStorage.getItem('aguia_theme_apoio') || 'light');
 
 /* ============ TABS PRINCIPAIS ============ */
 document.querySelectorAll('.tab-main').forEach(tab=>{
@@ -315,7 +311,10 @@ async function saveEmp(){
   };
   if(!body.empresa){ toast('Informe o nome da empresa', true); return; }
   const res = await apiPost(API_URL_EMPREGADOR, body);
-  if(res.success){ toast('Salvo com sucesso!'); closeModal('empModalBg'); loadEmpregador(); }
+  if(res.success){
+    toast(res.updatedExisting ? 'Empresa já existia — registro atualizado!' : 'Salvo com sucesso!');
+    closeModal('empModalBg'); loadEmpregador();
+  }
   else toast('Erro: ' + res.error, true);
 }
 async function deleteEmp(row){
@@ -325,33 +324,42 @@ async function deleteEmp(row){
   else toast('Erro: ' + res.error, true);
 }
 
-/* ============ CONTROLE SINDICAL (período fixo 2026/2027) ============ */
-async function loadSindical(){
-  document.getElementById('sindTableBody').innerHTML = '<tr><td colspan="7" class="loading">Carregando...</td></tr>';
+/* ============ CONTROLE SINDICAL ============ */
+async function loadSindicalInit(){
+  document.getElementById('sindTableBody').innerHTML = '<tr><td colspan="6" class="loading">Carregando...</td></tr>';
   try{
     const data = await withRetry(()=>apiGet(API_URL_SINDICAL, {action:'init'}));
     if(!data.success) throw new Error(data.error);
     sindCache = data.data;
     renderSind();
   }catch(e){
-    document.getElementById('sindTableBody').innerHTML = '<tr><td colspan="7" class="empty">Erro ao carregar: '+e.message+'</td></tr>';
+    document.getElementById('sindTableBody').innerHTML = '<tr><td colspan="6" class="empty">Erro ao carregar: '+e.message+'</td></tr>';
   }
+}
+async function reloadSindical(){
+  try{
+    const data = await withRetry(()=>apiGet(API_URL_SINDICAL, {action:'init'}));
+    if(!data.success) throw new Error(data.error);
+    sindCache = data.data;
+    renderSind();
+  }catch(e){ toast('Erro: ' + e.message, true); }
 }
 function switchSub(sub){
   currentSub = sub;
   document.querySelectorAll('.subtab').forEach(s=>s.classList.remove('active'));
   document.querySelector(`.subtab[data-sub="${sub}"]`).classList.add('active');
-  document.getElementById('sindDocHeader').textContent = sub === 'companies' ? 'CNPJ' : 'CPF';
+  document.getElementById('sindTheadCompanies').style.display = sub==='companies' ? '' : 'none';
+  document.getElementById('sindTheadDomestics').style.display = sub==='domestics' ? '' : 'none';
   renderSind();
 }
 function renderSind(){
   const term = document.getElementById('searchSind').value.toLowerCase();
   const list = (sindCache[currentSub]||[]).filter(r =>
     r.empresa.toLowerCase().includes(term) || (r.sindicato||'').toLowerCase().includes(term) ||
-    ((currentSub==='companies' ? r.cnpj : r.cpf) || '').toLowerCase().includes(term)
+    (currentSub==='companies' ? r.cnpj : r.cpf || '').toLowerCase().includes(term)
   );
   const body = document.getElementById('sindTableBody');
-  if(list.length === 0){ body.innerHTML = '<tr><td colspan="7" class="empty">Nenhum registro encontrado</td></tr>'; return; }
+  if(list.length === 0){ body.innerHTML = '<tr><td colspan="6" class="empty">Nenhum registro encontrado</td></tr>'; return; }
   body.innerHTML = list.map(r => `
     <tr data-row="${r._row}" onclick="selectRow(event,this)">
       <td>${r.empresa}</td>
@@ -359,7 +367,6 @@ function renderSind(){
       <td>${r.sindicato}</td>
       <td>${r.data}</td>
       <td>${r.dissidio}</td>
-      <td>${r.plr}</td>
       <td class="actions">
         <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openSindModal(${r._row})">Editar</button>
         <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteSind(${r._row})">Excluir</button>
@@ -379,9 +386,8 @@ function openSindModal(row){
     document.getElementById('sindSindicato').value = r.sindicato;
     document.getElementById('sindData').value = r.data;
     document.getElementById('sindDissidio').value = r.dissidio;
-    document.getElementById('sindPlr').value = r.plr;
   } else {
-    ['sindEmpresa','sindDoc','sindSindicato','sindData','sindDissidio','sindPlr'].forEach(id=>document.getElementById(id).value='');
+    ['sindEmpresa','sindDoc','sindSindicato','sindData','sindDissidio'].forEach(id=>document.getElementById(id).value='');
   }
   openModalEl('sindModalBg');
 }
@@ -394,22 +400,24 @@ async function saveSind(){
     empresa: document.getElementById('sindEmpresa').value,
     sindicato: document.getElementById('sindSindicato').value,
     data: document.getElementById('sindData').value,
-    dissidio: document.getElementById('sindDissidio').value,
-    plr: document.getElementById('sindPlr').value
+    dissidio: document.getElementById('sindDissidio').value
   };
   if(isCompany) body.cnpj = document.getElementById('sindDoc').value;
   else body.cpf = document.getElementById('sindDoc').value;
 
   if(!body.empresa){ toast('Informe o nome da empresa', true); return; }
   const res = await apiPost(API_URL_SINDICAL, body);
-  if(res.success){ toast('Salvo com sucesso!'); closeModal('sindModalBg'); loadSindical(); }
+  if(res.success){
+    toast(res.updatedExisting ? 'Registro já existia — atualizado!' : 'Salvo com sucesso!');
+    closeModal('sindModalBg'); reloadSindical();
+  }
   else toast('Erro: ' + res.error, true);
 }
 async function deleteSind(row){
   if(!confirm('Tem certeza que deseja excluir este registro?')) return;
   const action = currentSub === 'companies' ? 'deleteCompany' : 'deleteDomestic';
   const res = await apiPost(API_URL_SINDICAL, {action, _row: row});
-  if(res.success){ toast('Excluído com sucesso!'); loadSindical(); }
+  if(res.success){ toast('Excluído com sucesso!'); reloadSindical(); }
   else toast('Erro: ' + res.error, true);
 }
 
@@ -424,7 +432,7 @@ function selectRow(evt, tr){
 
 /* ============ INIT ============ */
 loadEmpregador();
-loadSindical();
+loadSindicalInit();
 </script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"55d6c902a8a143b1ab6c5051b2a1f75b","spa":2}' crossorigin="anonymous"></script>
 </body>
