@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Águia Contab | Cadastros de Apoio</title>
+<style>
+:root{
+    --bg:#f2f4f8; --card:#ffffff; --text:#1c2530; --muted:#5c6b7a;
+    --primary:#0b3d91; --primary-dark:#082b66; --border:#c9d2dc;
+    --green:#1e8e50; --green-bg:#e5f6ec; --red:#c62828; --red-bg:#fdeaea;
+    --header-bg:#0b3d91; --row-hover:#eef3fb; --row-selected:#d7e6ff;
+  }
+  [data-theme="dark"]{
+    --bg:#12161c; --card:#1b212b; --text:#e8edf3; --muted:#9aa7b5;
+    --primary:#3b7ddd; --primary-dark:#2c5fb0; --border:#333f4d;
+    --green:#3ec97a; --green-bg:#123a26; --red:#ff6b6b; --red-bg:#3a1414;
+    --header-bg:#0d1420; --row-hover:#222b38; --row-selected:#233150;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);transition:.2s;}
+  header{background:var(--header-bg);color:#fff;padding:14px 24px;display:flex;align-items:center;gap:16px;box-shadow:0 2px 8px rgba(0,0,0,.2);flex-wrap:wrap;}
+  header img{height:44px;border-radius:6px;background:#fff;padding:2px;}
+  header h1{font-size:18px;margin:0;flex:1;}
+  .btn-theme{
+    width:38px;height:38px;border-radius:50%;border:none;background:rgba(255,255,255,.15);
+    color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    line-height:1;padding:0;
+  }
+  .btn-theme:hover{background:rgba(255,255,255,.3);}
+
+  .tabs-main{display:flex;gap:0;background:var(--card);border-bottom:2px solid var(--border);padding:0 24px;}
+  .tab-main{padding:14px 22px;cursor:pointer;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;}
+  .tab-main.active{color:var(--primary);border-color:var(--primary);}
+
+  .container{padding:20px 24px;max-width:1400px;margin:0 auto;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;justify-content:space-between;}
+  .toolbar-left{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  input,select{padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);font-size:14px;}
+  .btn{padding:9px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px;}
+  .btn-primary{background:var(--primary);color:#fff;}
+  .btn-primary:hover{background:var(--primary-dark);}
+  .btn-outline{background:transparent;border:1px solid var(--primary);color:var(--primary);}
+  .btn-outline:hover{background:var(--primary);color:#fff;}
+  .btn-danger{background:var(--red);color:#fff;}
+  .btn-sm{padding:5px 10px;font-size:12px;border-radius:6px;}
+
+  .subtabs{display:flex;gap:8px;margin-bottom:14px;}
+  .subtab{padding:8px 16px;border-radius:20px;background:var(--card);border:1px solid var(--border);cursor:pointer;font-weight:600;font-size:13px;color:var(--muted);}
+  .subtab.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+
+  .card{background:var(--card);border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow-x:auto;border:1px solid var(--border);}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th,td{padding:10px 12px;text-align:left;border:1px solid var(--border);white-space:nowrap;}
+  th{background:var(--row-hover);color:var(--text);font-weight:700;position:sticky;top:0;}
+  tbody tr{cursor:pointer;}
+  tbody tr:hover{background:var(--row-hover);}
+  tbody tr.selected{background:var(--row-selected)!important;}
+  .actions{display:flex;gap:6px;}
+  .senha-cell{display:flex;align-items:center;gap:6px;}
+  .eye-btn{cursor:pointer;background:none;border:none;color:var(--muted);font-size:14px;}
+
+  .empty{text-align:center;padding:40px;color:var(--muted);}
+
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);align-items:center;justify-content:center;z-index:999;}
+  .modal-bg.active{display:flex;}
+  .modal{background:var(--card);border-radius:12px;padding:24px;width:95%;max-width:480px;max-height:90vh;overflow-y:auto;}
+  .modal h2{margin-top:0;font-size:18px;color:var(--primary);}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:13px;margin-bottom:5px;font-weight:600;color:var(--muted);}
+  .field input{width:100%;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;}
+
+  .toast{position:fixed;bottom:20px;right:20px;background:var(--green);color:#fff;padding:12px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.2);z-index:1000;display:none;font-size:14px;}
+  .toast.error{background:var(--red);}
+  .loading{text-align:center;padding:60px;color:var(--muted);}
+</style>
+</head>
+<body>
+
+<header>
+  <img src="https://chrysx6.github.io/LinksAguiaContab/links/img/logo1.jpg" alt="Águia Contab">
+  <h1>Águia Contab — Cadastros de Apoio</h1>
+  <button class="btn-theme" id="themeBtn" title="Alternar tema">🌙</button>
+</header>
+
+<div class="tabs-main">
+  <div class="tab-main active" data-view="empregador">Empregador Web</div>
+  <div class="tab-main" data-view="sindical">Controle Sindical</div>
+</div>
+
+<div class="container">
+
+  <!-- ============ EMPREGADOR WEB ============ -->
+  <div class="view active" id="view-empregador">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <input type="text" id="searchEmp" placeholder="Buscar por empresa, CNPJ ou login...">
+      </div>
+      <button class="btn btn-primary" onclick="openEmpModal()">+ Cadastrar Empresa</button>
+    </div>
+    <div class="card">
+      <table>
+        <thead>
+          <tr><th>Empresa</th><th>CNPJ</th><th>Login</th><th>Senha</th><th>Ações</th></tr>
+        </thead>
+        <tbody id="empTableBody">
+          <tr><td colspan="5" class="loading">Carregando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ============ CONTROLE SINDICAL ============ -->
+  <div class="view" id="view-sindical">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <span style="font-weight:700;color:var(--primary);">Período: 2026/2027</span>
+        <input type="text" id="searchSind" placeholder="Buscar empresa, sindicato...">
+      </div>
+      <button class="btn btn-primary" onclick="openSindModal()">+ Adicionar</button>
+    </div>
+
+    <div class="subtabs">
+      <div class="subtab active" data-sub="companies" onclick="switchSub('companies')">Empresas (CNPJ)</div>
+      <div class="subtab" data-sub="domestics" onclick="switchSub('domestics')">Domésticas (CPF)</div>
+    </div>
+
+    <div class="card">
+      <table>
+        <thead>
+          <tr id="sindThead">
+            <th>Empresa</th><th id="sindDocHeader">CNPJ</th><th>Sindicato</th><th>Data</th><th>Dissídio</th><th>PLR</th><th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="sindTableBody">
+          <tr><td colspan="7" class="loading">Carregando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ MODAL EMPREGADOR ============ -->
+<div class="modal-bg" id="empModalBg">
+  <div class="modal">
+    <h2 id="empModalTitle">Cadastrar Empresa</h2>
+    <input type="hidden" id="empRow">
+    <div class="field"><label>Empresa</label><input type="text" id="empEmpresa"></div>
+    <div class="field"><label>CNPJ</label><input type="text" id="empCnpj"></div>
+    <div class="field"><label>Login</label><input type="text" id="empLogin"></div>
+    <div class="field"><label>Senha</label><input type="text" id="empSenha"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('empModalBg')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEmp()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL SINDICAL ============ -->
+<div class="modal-bg" id="sindModalBg">
+  <div class="modal">
+    <h2 id="sindModalTitle">Adicionar</h2>
+    <input type="hidden" id="sindRow">
+    <div class="field"><label>Empresa</label><input type="text" id="sindEmpresa"></div>
+    <div class="field"><label id="sindDocLabel">CNPJ</label><input type="text" id="sindDoc"></div>
+    <div class="field"><label>Sindicato</label><input type="text" id="sindSindicato"></div>
+    <div class="field"><label>Data</label><input type="text" id="sindData"></div>
+    <div class="field"><label>Dissídio</label><input type="text" id="sindDissidio"></div>
+    <div class="field"><label>PLR</label><input type="text" id="sindPlr"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('sindModalBg')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveSind()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ CONFIGURAÇÃO ============ */
+const API_URL_EMPREGADOR = "COLE_AQUI_A_URL_DO_APPS_SCRIPT_DE_EMPREGADOR/exec";
+const API_URL_SINDICAL   = "COLE_AQUI_A_URL_DO_APPS_SCRIPT_DE_SINDICAL/exec";
+
+/* ============ ESTADO ============ */
+let empresasCache = [];
+let sindCache = { companies: [], domestics: [] };
+let currentSub = 'companies';
+let selectedRow = null;
+
+/* ============ UTIL ============ */
+function toast(msg, isError){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isError ? ' error' : '');
+  t.style.display = 'block';
+  setTimeout(()=> t.style.display='none', 3000);
+}
+function closeModal(id){ document.getElementById(id).classList.remove('active'); }
+function openModalEl(id){ document.getElementById(id).classList.add('active'); }
+
+async function apiGet(url, params){
+  const u = new URL(url);
+  Object.keys(params||{}).forEach(k=> u.searchParams.set(k, params[k]));
+  u.searchParams.set('_t', Date.now());
+  const res = await fetch(u.toString(), { cache:'no-store' });
+  return res.json();
+}
+async function apiPost(url, body){
+  const res = await fetch(url, {
+    method:'POST',
+    body: JSON.stringify(body),
+    headers: { 'Content-Type':'text/plain;charset=utf-8' }
+  });
+  return res.json();
+}
+async function withRetry(fn){
+  try{ return await fn(); }
+  catch(e){ await new Promise(r=>setTimeout(r,600)); return await fn(); }
+}
+
+/* ============ TEMA ============ */
+const themeBtn = document.getElementById('themeBtn');
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+  localStorage.setItem('aguia_theme', theme);
+}
+themeBtn.onclick = ()=>{
+  const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  applyTheme(current);
+};
+applyTheme(localStorage.getItem('aguia_theme') || 'light');
+
+/* ============ TABS PRINCIPAIS ============ */
+document.querySelectorAll('.tab-main').forEach(tab=>{
+  tab.onclick = ()=>{
+    document.querySelectorAll('.tab-main').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('view-' + tab.dataset.view).classList.add('active');
+  };
+});
+
+/* ============ EMPREGADOR WEB ============ */
+async function loadEmpregador(){
+  document.getElementById('empTableBody').innerHTML = '<tr><td colspan="5" class="loading">Carregando...</td></tr>';
+  try{
+    const data = await withRetry(()=>apiGet(API_URL_EMPREGADOR, {action:'init'}));
+    if(!data.success) throw new Error(data.error);
+    empresasCache = data.empresas;
+    renderEmp();
+  }catch(e){
+    document.getElementById('empTableBody').innerHTML = '<tr><td colspan="5" class="empty">Erro ao carregar: '+e.message+'</td></tr>';
+  }
+}
+
+function renderEmp(){
+  const term = document.getElementById('searchEmp').value.toLowerCase();
+  const list = empresasCache.filter(e =>
+    e.empresa.toLowerCase().includes(term) || e.cnpj.toLowerCase().includes(term) || e.login.toLowerCase().includes(term)
+  );
+  const body = document.getElementById('empTableBody');
+  if(list.length === 0){ body.innerHTML = '<tr><td colspan="5" class="empty">Nenhuma empresa encontrada</td></tr>'; return; }
+  body.innerHTML = list.map(e => `
+    <tr data-row="${e._row}" onclick="selectRow(event,this)">
+      <td>${e.empresa}</td>
+      <td>${e.cnpj}</td>
+      <td>${e.login}</td>
+      <td>
+        <div class="senha-cell">
+          <span class="senha-txt" data-senha="${e.senha}">••••••••</span>
+          <button class="eye-btn" onclick="event.stopPropagation();toggleSenha(this)">👁</button>
+        </div>
+      </td>
+      <td class="actions">
+        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openEmpModal(${e._row})">Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteEmp(${e._row})">Excluir</button>
+      </td>
+    </tr>`).join('');
+}
+function toggleSenha(btn){
+  const span = btn.previousElementSibling;
+  span.textContent = span.textContent === '••••••••' ? span.dataset.senha : '••••••••';
+}
+document.getElementById('searchEmp').addEventListener('input', renderEmp);
+
+function openEmpModal(row){
+  document.getElementById('empModalTitle').textContent = row ? 'Editar Empresa' : 'Cadastrar Empresa';
+  document.getElementById('empRow').value = row || '';
+  if(row){
+    const e = empresasCache.find(x=>x._row===row);
+    document.getElementById('empEmpresa').value = e.empresa;
+    document.getElementById('empCnpj').value = e.cnpj;
+    document.getElementById('empLogin').value = e.login;
+    document.getElementById('empSenha').value = e.senha;
+  } else {
+    ['empEmpresa','empCnpj','empLogin','empSenha'].forEach(id=>document.getElementById(id).value='');
+  }
+  openModalEl('empModalBg');
+}
+async function saveEmp(){
+  const row = document.getElementById('empRow').value;
+  const body = {
+    action: row ? 'update' : 'add',
+    _row: row ? parseInt(row) : undefined,
+    empresa: document.getElementById('empEmpresa').value,
+    cnpj: document.getElementById('empCnpj').value,
+    login: document.getElementById('empLogin').value,
+    senha: document.getElementById('empSenha').value
+  };
+  if(!body.empresa){ toast('Informe o nome da empresa', true); return; }
+  const res = await apiPost(API_URL_EMPREGADOR, body);
+  if(res.success){ toast('Salvo com sucesso!'); closeModal('empModalBg'); loadEmpregador(); }
+  else toast('Erro: ' + res.error, true);
+}
+async function deleteEmp(row){
+  if(!confirm('Tem certeza que deseja excluir esta empresa?')) return;
+  const res = await apiPost(API_URL_EMPREGADOR, {action:'delete', _row: row});
+  if(res.success){ toast('Excluído com sucesso!'); loadEmpregador(); }
+  else toast('Erro: ' + res.error, true);
+}
+
+/* ============ CONTROLE SINDICAL (período fixo 2026/2027) ============ */
+async function loadSindical(){
+  document.getElementById('sindTableBody').innerHTML = '<tr><td colspan="7" class="loading">Carregando...</td></tr>';
+  try{
+    const data = await withRetry(()=>apiGet(API_URL_SINDICAL, {action:'init'}));
+    if(!data.success) throw new Error(data.error);
+    sindCache = data.data;
+    renderSind();
+  }catch(e){
+    document.getElementById('sindTableBody').innerHTML = '<tr><td colspan="7" class="empty">Erro ao carregar: '+e.message+'</td></tr>';
+  }
+}
+function switchSub(sub){
+  currentSub = sub;
+  document.querySelectorAll('.subtab').forEach(s=>s.classList.remove('active'));
+  document.querySelector(`.subtab[data-sub="${sub}"]`).classList.add('active');
+  document.getElementById('sindDocHeader').textContent = sub === 'companies' ? 'CNPJ' : 'CPF';
+  renderSind();
+}
+function renderSind(){
+  const term = document.getElementById('searchSind').value.toLowerCase();
+  const list = (sindCache[currentSub]||[]).filter(r =>
+    r.empresa.toLowerCase().includes(term) || (r.sindicato||'').toLowerCase().includes(term) ||
+    ((currentSub==='companies' ? r.cnpj : r.cpf) || '').toLowerCase().includes(term)
+  );
+  const body = document.getElementById('sindTableBody');
+  if(list.length === 0){ body.innerHTML = '<tr><td colspan="7" class="empty">Nenhum registro encontrado</td></tr>'; return; }
+  body.innerHTML = list.map(r => `
+    <tr data-row="${r._row}" onclick="selectRow(event,this)">
+      <td>${r.empresa}</td>
+      <td>${currentSub==='companies' ? r.cnpj : r.cpf}</td>
+      <td>${r.sindicato}</td>
+      <td>${r.data}</td>
+      <td>${r.dissidio}</td>
+      <td>${r.plr}</td>
+      <td class="actions">
+        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openSindModal(${r._row})">Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteSind(${r._row})">Excluir</button>
+      </td>
+    </tr>`).join('');
+}
+document.getElementById('searchSind').addEventListener('input', renderSind);
+
+function openSindModal(row){
+  document.getElementById('sindModalTitle').textContent = row ? 'Editar Registro' : 'Adicionar Registro';
+  document.getElementById('sindRow').value = row || '';
+  document.getElementById('sindDocLabel').textContent = currentSub === 'companies' ? 'CNPJ' : 'CPF';
+  if(row){
+    const r = (sindCache[currentSub]||[]).find(x=>x._row===row);
+    document.getElementById('sindEmpresa').value = r.empresa;
+    document.getElementById('sindDoc').value = currentSub==='companies' ? r.cnpj : r.cpf;
+    document.getElementById('sindSindicato').value = r.sindicato;
+    document.getElementById('sindData').value = r.data;
+    document.getElementById('sindDissidio').value = r.dissidio;
+    document.getElementById('sindPlr').value = r.plr;
+  } else {
+    ['sindEmpresa','sindDoc','sindSindicato','sindData','sindDissidio','sindPlr'].forEach(id=>document.getElementById(id).value='');
+  }
+  openModalEl('sindModalBg');
+}
+async function saveSind(){
+  const row = document.getElementById('sindRow').value;
+  const isCompany = currentSub === 'companies';
+  const body = {
+    action: (row ? 'update' : 'add') + (isCompany ? 'Company' : 'Domestic'),
+    _row: row ? parseInt(row) : undefined,
+    empresa: document.getElementById('sindEmpresa').value,
+    sindicato: document.getElementById('sindSindicato').value,
+    data: document.getElementById('sindData').value,
+    dissidio: document.getElementById('sindDissidio').value,
+    plr: document.getElementById('sindPlr').value
+  };
+  if(isCompany) body.cnpj = document.getElementById('sindDoc').value;
+  else body.cpf = document.getElementById('sindDoc').value;
+
+  if(!body.empresa){ toast('Informe o nome da empresa', true); return; }
+  const res = await apiPost(API_URL_SINDICAL, body);
+  if(res.success){ toast('Salvo com sucesso!'); closeModal('sindModalBg'); loadSindical(); }
+  else toast('Erro: ' + res.error, true);
+}
+async function deleteSind(row){
+  if(!confirm('Tem certeza que deseja excluir este registro?')) return;
+  const action = currentSub === 'companies' ? 'deleteCompany' : 'deleteDomestic';
+  const res = await apiPost(API_URL_SINDICAL, {action, _row: row});
+  if(res.success){ toast('Excluído com sucesso!'); loadSindical(); }
+  else toast('Erro: ' + res.error, true);
+}
+
+/* ============ SELEÇÃO DE LINHA ============ */
+function selectRow(evt, tr){
+  if(evt.target.closest('button')) return;
+  if(selectedRow) selectedRow.classList.remove('selected');
+  if(selectedRow === tr){ selectedRow = null; return; }
+  tr.classList.add('selected');
+  selectedRow = tr;
+}
+
+/* ============ INIT ============ */
+loadEmpregador();
+loadSindical();
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"55d6c902a8a143b1ab6c5051b2a1f75b","spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
